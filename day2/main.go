@@ -22,6 +22,7 @@ func main() {
 		if game.IsPossible(dice{red: 12, green: 13, blue: 14}) {
 			res1 += game.id
 		}
+		res2 += game.MinPossibleDice().Power()
 	}
 
 	log.Println("game (simple):", res1)
@@ -38,6 +39,10 @@ func (d dice) Gte(o dice) bool {
 	return d.red >= o.red && d.green >= o.green && d.blue >= o.blue
 }
 
+func (d dice) Power() int {
+	return d.red * d.green * d.blue
+}
+
 type game struct {
 	id    int
 	dices []dice
@@ -51,6 +56,26 @@ func (g game) IsPossible(o dice) bool {
 	}
 
 	return true
+}
+
+func (g game) MinPossibleDice() dice {
+	res := dice{red: 0, green: 0, blue: 0}
+
+	for _, d := range g.dices {
+		if d.red > res.red {
+			res.red = d.red
+		}
+
+		if d.green > res.green {
+			res.green = d.green
+		}
+
+		if d.blue > res.blue {
+			res.blue = d.blue
+		}
+	}
+
+	return res
 }
 
 func mustInt(s string) int {
