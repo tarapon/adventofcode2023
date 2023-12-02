@@ -27,8 +27,6 @@ func main() {
 func extractNumber(s string, advanced bool) int {
 	words := []string{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine"}
 
-	// one, two, thee, four, five, six, seven, eight, nine
-
 	first, last := -1, -1
 	for idx, c := range s {
 		if c >= '0' && c <= '9' {
