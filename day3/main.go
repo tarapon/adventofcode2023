@@ -14,15 +14,21 @@ func main() {
 		panic(err)
 	}
 
-	res1 := 0
+	res1, res2 := 0, 0
 
-	ch := extractNumbers(strings.Split(string(content), "\n"))
+	ch1 := extractNumbers(strings.Split(string(content), "\n"))
+	ch2 := extractNumberPairs(strings.Split(string(content), "\n"))
 
-	for num := range ch {
+	for num := range ch1 {
 		res1 += num
 	}
 
-	log.Println("Parts sum:", res1)
+	for num := range ch2 {
+		res2 += num
+	}
+
+	log.Println("Parts (simple):", res1)
+	log.Println("Parts (advanced):", res2)
 }
 
 func mustParseInt(s string) int {
@@ -35,7 +41,11 @@ func mustParseInt(s string) int {
 }
 
 func isSymbol(c int32) bool {
-	return c != '.' && !(c >= '0' && c <= '9')
+	return c != '.' && !isDigit(c)
+}
+
+func isDigit(c int32) bool {
+	return c >= '0' && c <= '9'
 }
 
 func hasSymbol(s string) bool {
@@ -81,6 +91,64 @@ func extractNumbers(data []string) <-chan int {
 
 				if isAdjacent {
 					ch <- mustParseInt(line[i1:i2])
+				}
+			}
+		}
+	}()
+
+	return ch
+}
+
+func findNumbersAround(line string, pos int) []int {
+	if isDigit(rune(line[pos])) {
+		k1, k2 := pos, pos
+
+		for k1 >= 0 && isDigit(rune(line[k1])) {
+			k1--
+		}
+
+		for k2 < len(line) && isDigit(rune(line[k2])) {
+			k2++
+		}
+
+		return []int{mustParseInt(line[k1+1 : k2])}
+	}
+
+	var nums []int
+
+	if pos > 0 && isDigit(rune(line[pos-1])) {
+		nums = append(nums, findNumbersAround(line, pos-1)...)
+	}
+
+	if pos < len(line)-1 && isDigit(rune(line[pos+1])) {
+		nums = append(nums, findNumbersAround(line, pos+1)...)
+	}
+
+	return nums
+}
+
+func extractNumberPairs(data []string) <-chan int {
+	ch := make(chan int)
+
+	go func() {
+		defer close(ch)
+		for i, line := range data {
+			for j, c := range line {
+				if !isSymbol(c) {
+					continue
+				}
+
+				var nums []int
+				for k := i - 1; k <= i+1; k++ {
+					if k < 0 || k >= len(data) {
+						continue
+					}
+
+					nums = append(nums, findNumbersAround(data[k], j)...)
+				}
+
+				if len(nums) == 2 {
+					ch <- nums[0] * nums[1]
 				}
 			}
 		}
