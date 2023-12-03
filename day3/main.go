@@ -99,32 +99,42 @@ func extractNumbers(data []string) <-chan int {
 	return ch
 }
 
-func findNumbersAround(line string, pos int) []int {
-	if isDigit(rune(line[pos])) {
-		k1, k2 := pos, pos
+func findNumbersAround(line string, pos int) <-chan int {
+	ch := make(chan int)
 
-		for k1 >= 0 && isDigit(rune(line[k1])) {
-			k1--
+	go func() {
+		defer close(ch)
+
+		if isDigit(rune(line[pos])) {
+			k1, k2 := pos, pos
+
+			for k1 >= 0 && isDigit(rune(line[k1])) {
+				k1--
+			}
+
+			for k2 < len(line) && isDigit(rune(line[k2])) {
+				k2++
+			}
+
+			ch <- mustParseInt(line[k1+1 : k2])
+			return
 		}
 
-		for k2 < len(line) && isDigit(rune(line[k2])) {
-			k2++
+		if pos > 0 && isDigit(rune(line[pos-1])) {
+			for num := range findNumbersAround(line, pos-1) {
+				ch <- num
+			}
 		}
 
-		return []int{mustParseInt(line[k1+1 : k2])}
-	}
+		if pos < len(line)-1 && isDigit(rune(line[pos+1])) {
+			for num := range findNumbersAround(line, pos+1) {
+				ch <- num
+			}
+		}
 
-	var nums []int
+	}()
 
-	if pos > 0 && isDigit(rune(line[pos-1])) {
-		nums = append(nums, findNumbersAround(line, pos-1)...)
-	}
-
-	if pos < len(line)-1 && isDigit(rune(line[pos+1])) {
-		nums = append(nums, findNumbersAround(line, pos+1)...)
-	}
-
-	return nums
+	return ch
 }
 
 func extractNumberPairs(data []string) <-chan int {
@@ -139,12 +149,15 @@ func extractNumberPairs(data []string) <-chan int {
 				}
 
 				var nums []int
+
 				for k := i - 1; k <= i+1; k++ {
 					if k < 0 || k >= len(data) {
 						continue
 					}
 
-					nums = append(nums, findNumbersAround(data[k], j)...)
+					for n := range findNumbersAround(data[k], j) {
+						nums = append(nums, n)
+					}
 				}
 
 				if len(nums) == 2 {
