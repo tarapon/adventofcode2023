@@ -13,26 +13,35 @@ type card struct {
 	id      int
 	winning []int
 	numbers []int
+	copies  int
 }
 
-func (c *card) interception() []int {
-	interception := make([]int, 0)
+func (c *card) inc(value int) int {
+	c.copies += value
+	return c.copies
+}
+
+func (c *card) winningCount() int {
+	return len(c.intersection())
+}
+
+func (c *card) intersection() []int {
+	intersection := make([]int, 0)
 
 	for _, a := range c.numbers {
 		for _, b := range c.winning {
 			if a == b {
-				interception = append(interception, a)
+				intersection = append(intersection, a)
 				break
 			}
 		}
 	}
 
-	return interception
+	return intersection
 }
 
 func (c *card) points() int {
-	nums := c.interception()
-	return int(math.Pow(float64(2), float64(len(nums)-1)))
+	return int(math.Pow(2, float64(c.winningCount()-1)))
 }
 
 func main() {
@@ -46,8 +55,14 @@ func main() {
 
 	cards := parseInput(lines)
 
-	for _, card := range cards {
+	for i, card := range cards {
 		res1 += card.points()
+
+		for j := i + 1; j < len(cards) && j-i-1 < card.winningCount(); j++ {
+			cards[j].inc(card.copies)
+		}
+
+		res2 += card.copies
 	}
 
 	log.Println("scratchcards (simple):", res1)
@@ -85,6 +100,7 @@ func parseInput(lines []string) []card {
 		card.id = mustParseInt(parts[1])
 		card.winning = parseNumbers(parts[2])
 		card.numbers = parseNumbers(parts[3])
+		card.copies = 1
 
 		cards = append(cards, card)
 	}
