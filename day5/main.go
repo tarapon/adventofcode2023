@@ -2,6 +2,7 @@ package main
 
 import (
 	h "advcode2025/helper"
+	"golang.org/x/exp/slices"
 	"log"
 	"os"
 	"regexp"
@@ -17,7 +18,7 @@ func main() {
 
 	numbers := parseNumbers(strings.Split(string(content), "\n")[0])
 	ranges := h.Map[[]int, tRange](h.InGroupsOf[int](numbers, 2), func(a []int) tRange {
-		return tRange{min: a[0], max: a[1]}
+		return tRange{min: a[0], max: a[0] + a[1] - 1}
 	})
 	maps := parseInput(strings.Split(string(content), "\n")[1:])
 
@@ -85,6 +86,10 @@ func (r tRange) include(a int) bool {
 	return a >= r.min && a <= r.max
 }
 
+func (r tRange) empty() bool {
+	return r.min > r.max
+}
+
 func (r tRange) translate(a int) int {
 	if r.include(a) {
 		return r.to + (a - r.min)
@@ -99,6 +104,10 @@ type tMap struct {
 
 func (m *tMap) AddRange(r tRange) {
 	m.ranges = append(m.ranges, r)
+
+	slices.SortStableFunc(m.ranges, func(a, b tRange) int {
+		return a.min - b.min
+	})
 }
 
 func (m *tMap) translate(a int) int {
@@ -117,6 +126,56 @@ func (m *tMap) translateNumbers(values []int) []int {
 	})
 }
 
+func (m *tMap) split(value tRange) []tRange {
+	result := make([]tRange, 0, 1)
+
+	for _, r := range m.ranges {
+		if value.empty() || r.min > value.max {
+			break
+		}
+
+		if r.max < value.min {
+			continue
+		}
+
+		if value.min < r.min {
+			result = append(result, tRange{min: value.min, max: r.min - 1})
+			if value.max <= r.max {
+				result = append(result, tRange{min: r.min, max: value.max})
+				value.min = value.max + 1
+			} else {
+				result = append(result, tRange{min: r.min, max: r.max})
+				value.min = r.max + 1
+			}
+		} else {
+			if value.max <= r.max {
+				result = append(result, tRange{min: value.min, max: value.max})
+				value.min = value.max + 1
+			} else {
+				result = append(result, tRange{min: value.min, max: r.max})
+				value.min = r.max + 1
+			}
+		}
+	}
+
+	if !value.empty() {
+		result = append(result, value)
+	}
+
+	return result
+}
+
 func (m *tMap) translateRanges(values []tRange) []tRange {
-	return values
+	result := make([]tRange, 0, len(values))
+
+	for _, r := range values {
+		for _, r1 := range m.split(r) {
+			result = append(result, tRange{
+				min: m.translate(r1.min),
+				max: m.translate(r1.max),
+			})
+		}
+	}
+
+	return result
 }
