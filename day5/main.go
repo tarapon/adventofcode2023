@@ -16,13 +16,21 @@ func main() {
 	}
 
 	numbers := parseNumbers(strings.Split(string(content), "\n")[0])
+	ranges := h.Map[[]int, tRange](h.InGroupsOf[int](numbers, 2), func(a []int) tRange {
+		return tRange{min: a[0], max: a[1]}
+	})
 	maps := parseInput(strings.Split(string(content), "\n")[1:])
 
 	for _, m := range maps {
-		numbers = m.translateSlice(numbers)
+		numbers = m.translateNumbers(numbers)
+	}
+
+	for _, m := range maps {
+		ranges = m.translateRanges(ranges)
 	}
 
 	log.Println("Part 1:", h.Min(numbers))
+	log.Println("Part 2:", h.Min(h.Map[tRange, int](ranges, func(r tRange) int { return r.min })))
 }
 
 func parseNumbers(input string) []int {
@@ -103,8 +111,12 @@ func (m *tMap) translate(a int) int {
 	return a
 }
 
-func (m *tMap) translateSlice(values []int) []int {
+func (m *tMap) translateNumbers(values []int) []int {
 	return h.Map[int](values, func(a int) int {
 		return m.translate(a)
 	})
+}
+
+func (m *tMap) translateRanges(values []tRange) []tRange {
+	return values
 }

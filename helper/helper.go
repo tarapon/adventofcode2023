@@ -22,6 +22,16 @@ func Map[T any, R any](input []T, fn func(T) R) []R {
 	return result
 }
 
+func InGroupsOf[T any](input []T, n int) [][]T {
+	result := make([][]T, 0)
+
+	for i := 0; i < len(input); i += n {
+		result = append(result, input[i:i+n])
+	}
+
+	return result
+}
+
 func First[T any](input []T) T {
 	return input[0]
 }
