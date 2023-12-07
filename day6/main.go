@@ -15,14 +15,14 @@ func main() {
 		panic(err)
 	}
 
-	res1, res2 := 0, 0
+	res1, res2 := 1, 0
 	lines := strings.Split(string(content), "\n")
 	races := parseInput(lines)
 
-	//for _, race := range races {
-	//	res1 += 0
-	//	res2 += 0
-	//}
+	for _, race := range races {
+		res1 *= race.winVariants()
+		res2 += 0
+	}
 
 	log.Println(races)
 
@@ -33,6 +33,22 @@ func main() {
 type race struct {
 	time     int
 	distance int
+}
+
+func (r race) holdAndGo(t int) int {
+	return (r.time - t) * t
+}
+
+func (r race) winVariants() int {
+	k := 0
+
+	for i := 1; i < r.time; i++ {
+		if r.holdAndGo(i) > r.distance {
+			k++
+		}
+	}
+
+	return k
 }
 
 func parseInput(lines []string) []race {
