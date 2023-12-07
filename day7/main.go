@@ -15,20 +15,26 @@ func main() {
 		panic(err)
 	}
 
-	res1, res2 := 0, 0
 	lines := strings.Split(string(content), "\n")
 	decks := parseDecks(lines)
 
+	res1, res2 := score(decks, false), score(decks, true)
+
+	log.Println("score (simple):", res1)
+	log.Println("score (jokers):", res2)
+}
+
+func score(decks []hand, joker bool) int {
+	res := 0
 	slices.SortFunc(decks, func(a, b hand) int {
-		return a.compare(b)
+		return a.compare(b, joker)
 	})
 
 	for i, deck := range decks {
-		res1 += deck.bet * (i + 1)
+		res += deck.bet * (i + 1)
 	}
 
-	log.Println("score (simple):", res1)
-	log.Println("score (advanced):", res2)
+	return res
 }
 
 type hand struct {
@@ -36,13 +42,7 @@ type hand struct {
 	bet  int
 }
 
-func (h hand) rank() int {
-	m := make(map[byte]int)
-
-	for _, card := range h.deck {
-		m[card]++
-	}
-
+func (h hand) setScore(m map[byte]int) int {
 	keys := make([]byte, 0, len(m))
 	for k := range m {
 		keys = append(keys, k)
@@ -70,9 +70,30 @@ func (h hand) rank() int {
 	}
 }
 
-func (h hand) compare(other hand) int {
-	rankA := h.rank()
-	rankB := other.rank()
+func (h hand) rank(joker bool) int {
+	m := make(map[byte]int)
+	kMax, vMax := byte(0), 0
+
+	for _, card := range h.deck {
+		m[card]++
+
+		if m[card] > vMax && card != 'J' {
+			vMax = m[card]
+			kMax = card
+		}
+	}
+
+	if joker {
+		m[kMax] += m['J']
+		delete(m, 'J')
+	}
+
+	return h.setScore(m)
+}
+
+func (h hand) compare(other hand, joker bool) int {
+	rankA := h.rank(joker)
+	rankB := other.rank(joker)
 
 	if rankA != rankB {
 		return rankA - rankB
@@ -81,6 +102,10 @@ func (h hand) compare(other hand) int {
 	cards := map[byte]int{
 		'A': 14, 'K': 13, 'Q': 12, 'J': 11, 'T': 10,
 		'9': 9, '8': 8, '7': 7, '6': 6, '5': 5, '4': 4, '3': 3, '2': 2,
+	}
+
+	if joker {
+		cards['J'] = 1
 	}
 
 	for i := 0; i < 5; i++ {
