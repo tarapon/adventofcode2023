@@ -17,12 +17,14 @@ func main() {
 
 	res1, res2 := 1, 0
 	lines := strings.Split(string(content), "\n")
-	races := parseInput(lines)
+	races := parseInput1(lines)
+	bigRace := parseInput2(lines)
 
 	for _, race := range races {
 		res1 *= race.winVariants()
-		res2 += 0
 	}
+
+	res2 = bigRace.winVariants()
 
 	log.Println(races)
 
@@ -51,7 +53,7 @@ func (r race) winVariants() int {
 	return k
 }
 
-func parseInput(lines []string) []race {
+func parseInput1(lines []string) []race {
 	re := regexp.MustCompile(`(\d+)+`)
 
 	times := h.Map[[]string, int](re.FindAllStringSubmatch(lines[0], -1), func(match []string) int {
@@ -69,4 +71,15 @@ func parseInput(lines []string) []race {
 	}
 
 	return races
+}
+
+func parseInput2(lines []string) race {
+	re := regexp.MustCompile(`\s+`)
+	line1 := re.ReplaceAllString(lines[0], "")
+	line2 := re.ReplaceAllString(lines[1], "")
+
+	return race{
+		time:     h.Must[int](strconv.Atoi(strings.Split(line1, ":")[1])),
+		distance: h.Must[int](strconv.Atoi(strings.Split(line2, ":")[1])),
+	}
 }
