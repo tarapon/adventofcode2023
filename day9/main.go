@@ -24,8 +24,8 @@ func main() {
 	})
 
 	for _, seq := range sequences {
-		value := predictNextNumber(seq)
-		res1 += value
+		res1 += predictNext(seq)
+		res2 += predictPrev(seq)
 	}
 
 	log.Println("calibrate (simple):", res1)
@@ -44,7 +44,7 @@ func zeros(numbers []int) bool {
 	return h.All(numbers, func(n int) bool { return n == 0 })
 }
 
-func predictNextNumber(numbers []int) int {
+func predictNext(numbers []int) int {
 	lasts := make([]int, 0)
 
 	for !zeros(numbers) {
@@ -55,6 +55,22 @@ func predictNextNumber(numbers []int) int {
 	sum := 0
 	for _, n := range lasts {
 		sum += n
+	}
+
+	return sum
+}
+
+func predictPrev(numbers []int) int {
+	firsts := make([]int, 0)
+
+	for !zeros(numbers) {
+		firsts = append(firsts, numbers[0])
+		numbers = diffs(numbers)
+	}
+
+	sum := 0
+	for _, n := range h.Reverse(firsts) {
+		sum = n - sum
 	}
 
 	return sum

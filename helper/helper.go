@@ -93,3 +93,13 @@ func Reduce[T any](input []T, fn func(T, T) T) T {
 
 	return result
 }
+
+func Reverse[T any](input []T) []T {
+	result := make([]T, len(input))
+
+	for i, v := range input {
+		result[len(input)-i-1] = v
+	}
+
+	return result
+}
