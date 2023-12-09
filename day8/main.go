@@ -1,6 +1,7 @@
 package main
 
 import (
+	h "advcode2025/helper"
 	"log"
 	"os"
 	"regexp"
@@ -24,6 +25,35 @@ func main() {
 		mp.move(steps.next())
 	}
 
+	maps := make([]*tMap, 0)
+	for key, _ := range mp.data {
+		if strings.HasSuffix(key, "A") {
+			maps = append(maps, &tMap{
+				cur:  key,
+				data: mp.data,
+			})
+		}
+	}
+
+	steps.reset()
+	allZeds := false
+	values := make([]int, len(maps))
+
+	for !allZeds {
+		res2++
+		step := steps.next()
+		for i, m := range maps {
+			m.move(step)
+			if values[i] == 0 && strings.HasSuffix(m.cur, "Z") {
+				values[i] = res2
+			}
+		}
+
+		allZeds = h.All(values, func(v int) bool { return v > 0 })
+	}
+
+	res2 = lcm(values[0], values[1], values[2:]...)
+
 	log.Println("distance (simple):", res1)
 	log.Println("distance (advanced):", res2)
 }
@@ -39,6 +69,10 @@ func (s *tSteps) next() string {
 	}
 	s.idx++
 	return s.steps[s.idx-1]
+}
+
+func (s *tSteps) reset() {
+	s.idx = 0
 }
 
 type tMap struct {
@@ -68,4 +102,23 @@ func parseMap(lines []string) tMap {
 	}
 
 	return m
+}
+
+func gcd(a, b int) int {
+	for b != 0 {
+		t := b
+		b = a % b
+		a = t
+	}
+	return a
+}
+
+func lcm(a, b int, integers ...int) int {
+	result := a * b / gcd(a, b)
+
+	for i := 0; i < len(integers); i++ {
+		result = lcm(result, integers[i])
+	}
+
+	return result
 }

@@ -63,3 +63,33 @@ func Max[T constraints.Ordered](input []T) T {
 
 	return m
 }
+
+func All[T any](input []T, fn func(T) bool) bool {
+	for _, v := range input {
+		if !fn(v) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func Any[T any](input []T, fn func(T) bool) bool {
+	for _, v := range input {
+		if fn(v) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func Reduce[T any](input []T, fn func(T, T) T) T {
+	result := input[0]
+
+	for _, v := range input[1:] {
+		result = fn(result, v)
+	}
+
+	return result
+}
