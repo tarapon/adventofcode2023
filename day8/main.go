@@ -106,18 +106,16 @@ func parseMap(lines []string) tMap {
 
 func gcd(a, b int) int {
 	for b != 0 {
-		t := b
-		b = a % b
-		a = t
+		a, b = b, a%b
 	}
 	return a
 }
 
-func lcm(a, b int, integers ...int) int {
+func lcm(a, b int, others ...int) int {
 	result := a * b / gcd(a, b)
 
-	for i := 0; i < len(integers); i++ {
-		result = lcm(result, integers[i])
+	for i := 0; i < len(others); i++ {
+		result = lcm(result, others[i])
 	}
 
 	return result
