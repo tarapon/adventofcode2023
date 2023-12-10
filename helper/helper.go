@@ -103,3 +103,13 @@ func Reverse[T any](input []T) []T {
 
 	return result
 }
+
+func Contains[T comparable](input []T, v T) bool {
+	for _, x := range input {
+		if x == v {
+			return true
+		}
+	}
+
+	return false
+}
