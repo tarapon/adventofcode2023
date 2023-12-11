@@ -18,27 +18,70 @@ func main() {
 	m := parseInput(lines)
 
 	graph := toList(m)
-	res1 = longestPath(graph)
+	res1 = graph.perimeter() / 2
+	res2 = graph.square() - res1 + 1
 
 	log.Println("calibrate (simple):", res1)
 	log.Println("calibrate (advanced):", res2)
 }
 
-func longestPath(head *node) int {
-	k := 1
-	prev, next := head.prev, head.next
-	for prev != next {
-		k++
-		prev, next = prev.prev, next.next
-	}
-
-	return k
+type vertex struct {
+	i, j int
 }
 
 type node struct {
 	i, j int
 	next *node
 	prev *node
+}
+
+func (n *node) vertex() vertex {
+	return vertex{i: n.i, j: n.j}
+}
+
+func (n *node) vertices() []vertex {
+	res := make([]vertex, 0)
+
+	cur := n
+	for cur.next != n {
+		res = append(res, cur.vertex())
+		cur = cur.next
+	}
+
+	res = append(res, cur.vertex())
+
+	return res
+}
+
+func (n *node) square() int {
+	s1, s2 := 0, 0
+	v := n.vertices()
+
+	for k := 0; k < len(v)-1; k++ {
+		s1 += v[k].i * v[k+1].j
+		s2 += v[k+1].i * v[k].j
+	}
+
+	s1 += v[len(v)-1].i * v[0].j
+	s2 += v[0].i * v[len(v)-1].j
+
+	if s1 > s2 {
+		return (s1 - s2) / 2
+	} else {
+		return (s2 - s1) / 2
+	}
+}
+
+func (n *node) perimeter() int {
+	cur := n
+	k := 1
+
+	for cur.next != n {
+		cur = cur.next
+		k++
+	}
+
+	return k
 }
 
 func parseInput(s []string) [][]byte {
